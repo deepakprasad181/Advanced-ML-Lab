@@ -1,0 +1,36 @@
+import numpy as np
+
+# Define the environment and Q-table
+# 0: empty cell, 1: obstacle, 2: goal
+env = np.array([[0, 0, 0, 1, 0], [0, 1, 0, 1, 0], [0, 1, 0, 1, 0], [0, 0, 0, 1, 2]])
+Q = np.zeros((np.prod(env.shape), 4))
+
+# Define hyperparameters
+lr = 0.8
+dr = 0.95
+ep = 0.2
+ne = 1000
+
+# Define A
+A = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
+# Perform Q-learning
+for _ in range(ne):
+    S = (0, 0)
+    while env[S] != 2:
+        action = np.random.choice(4) if np.random.uniform(0, 1) < ep else np.argmax(Q[S[0]*env.shape[1]+S[1]])
+        new_S = (max(min(S[0]+A[action][0], env.shape[0]-1), 0), max(min(S[1]+A[action][1], env.shape[1]-1), 0))
+        reward = -1 if env[new_S] == 1 else (10 if env[new_S] == 2 else 0)
+        Q[S[0]*env.shape[1]+S[1]][action] += lr * (reward + dr*np.max(Q[new_S[0]*env.shape[1]+new_S[1]]) - 
+                                 Q[S[0]*env.shape[1]+S[1]][action])
+        S = new_S
+
+# Find the optimal path
+S = (0, 0)
+optimal_path = [S]
+while env[S] != 2:
+    action = np.argmax(Q[S[0]*env.shape[1]+S[1]])
+    S = (max(min(S[0]+A[action][0], env.shape[0]-1), 0), max(min(S[1]+A[action][1], env.shape[1]-1), 0))
+    optimal_path.append(S)
+
+print("Optimal Path:", optimal_path)
