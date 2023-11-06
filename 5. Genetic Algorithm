@@ -1,0 +1,47 @@
+import random
+import string
+
+target = "HELLO, WORLD!"
+
+ps = 200
+mr = 0.01
+
+def generate_random_string(length):
+    return ''.join(random.choice(string.printable) for _ in range(length))
+
+def calculate_fitness(string):
+    return sum(1 for a, b in zip(string, target) if a == b)
+
+def select(population):
+    total_fitness = sum(calculate_fitness(ind) for ind in population)
+    r = random.uniform(0, total_fitness)
+    current_sum = 0
+    for ind in population:
+        current_sum += calculate_fitness(ind)
+        if current_sum >= r:
+            return ind
+
+def create_new_generation(population):
+    new_population = []
+    for _ in range(ps):
+        parent1 = select(population)
+        parent2 = select(population)
+        split_point = random.randint(1, len(target) - 1)
+        child = parent1[:split_point] + parent2[split_point:]
+        for i in range(len(child)):
+            if random.random() < mr:
+                child = child[:i] + random.choice(string.printable) + child[i+1:]
+        new_population.append(child)
+    return new_population
+
+population = [generate_random_string(len(target)) for _ in range(ps)]
+generation = 1
+
+while True:
+    population.sort(key=lambda x: -calculate_fitness(x))
+    best_individual = population[0]
+    print(f"Generation {generation}: {best_individual}")
+    if best_individual == target:
+        break
+    population = create_new_generation(population)
+    generation += 1
